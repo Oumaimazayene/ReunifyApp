@@ -33,7 +33,7 @@ const RegisterForm = () => {
   const handleSubmit = (values, { setSubmitting }) => {
     dispatch(registerRequest());
 
-    fetch("http://localhost:5000/auth/register", {
+    fetch(process.env.URL_API + "/auth/register", {
       method: "POST",
       crossDomain: true,
       headers: {

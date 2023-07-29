@@ -1,38 +1,16 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-const initialState = {
-  user: null,
-  isLoading: false,
-  token: localStorage.getItem("authToken") || null,
-  error: null,
-};
-
-const loginSlice = createSlice({
-  name: "login",
-
-  initialState,
-  reducers: {
-    loginRequest: (state) => {
-      state.isLoading = true;
-      state.error = null;
-    },
-    loginSuccess: (state, action) => {
-      state.isLoading = false;
-      state.user = action.payload;
-      localStorage.setItem("authToken", action.payload.token);
-    },
-
-    loginFailure: (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload;
-    },
-    logout: (state) => {
-      state.user = null;
-    },
-  },
-});
-
-export const { loginRequest, loginSuccess, loginFailure, logout } =
-  loginSlice.actions;
-
-export default loginSlice.reducer;
+export const login = createAsyncThunk(
+  "auth/login",
+  async ({ formValue, navigate, toast }, { rejectWithValue }) => {
+    try {
+      const response = await API.post("/users/signin", formValue);
+      toast.success("Login Successfully");
+      // navigate("/dashboard");
+      return response.data;
+    } catch (err) {
+      console.log("13", err);
+      return rejectWithValue(err.response.data);
+    }
+  }
+);

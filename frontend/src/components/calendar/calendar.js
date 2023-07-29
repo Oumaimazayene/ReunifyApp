@@ -1,6 +1,5 @@
 import * as React from "react";
 import { createStore } from "redux";
-import { connect, Provider } from "react-redux";
 import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import ButtonGroup from "@mui/material/ButtonGroup";
@@ -9,9 +8,12 @@ import { styled, alpha } from "@mui/material/styles";
 import { teal, red } from "@mui/material/colors";
 import classNames from "clsx";
 import { ViewState } from "@devexpress/dx-react-scheduler";
+import { useState, useEffect } from "react";
+import { connect, Provider } from "react-redux";
+
 import {
-  MonthView,
   Scheduler,
+  MonthView,
   WeekView,
   Toolbar,
   DateNavigator,
@@ -20,8 +22,7 @@ import {
   ViewSwitcher,
   Resources,
 } from "@devexpress/dx-react-scheduler-material-ui";
-
-import { appointments } from "./appointments";
+import Reservations from "./appointments";
 
 const LOCATIONS = ["Room 1", "Room 2"];
 const LOCATIONS_SHORT = [1, 2];
@@ -37,7 +38,6 @@ const resources = [
 ];
 
 const PREFIX = "Demo";
-
 // #FOLD_BLOCK
 const classes = {
   flexibleSpace: `${PREFIX}-flexibleSpace`,
@@ -104,7 +104,7 @@ const StyledButtonGroup = styled(ButtonGroup)(
       height: spacing(4.875),
     },
     [`& .${classes.longButtonText}`]: {
-      "@media (max-width: 800px)": {
+      "@media (min-width: 800px)": {
         display: "none",
       },
     },
@@ -171,7 +171,7 @@ const AppointmentContent = ({ data, formatDate, ...restProps }) => (
   <StyledAppointmentsAppointmentContent
     {...restProps}
     formatDate={formatDate}
-    data={data}
+    data={Reservations}
   >
     <div className={classes.container}>
       <div className={classes.title}>{data.title}</div>
@@ -203,6 +203,11 @@ const Filter = ({ onCurrentFilterChange, currentFilter }) => (
 );
 
 const handleButtonClick = (locationName, locations) => {
+  if (!Array.isArray(locations)) {
+    // Faites quelque chose si locations n'est pas un tableau valide
+    return;
+  }
+
   if (locations.indexOf(locationName) > -1) {
     return locations.filter((location) => location !== locationName);
   }
@@ -211,27 +216,25 @@ const handleButtonClick = (locationName, locations) => {
   return nextLocations;
 };
 
-const getButtonClass = (locations, location) =>
-  locations.indexOf(location) > -1 && classes.selectedButton;
-
+const getButtonClass = (locations, location) => {
+  if (Array.isArray(locations) && locations.indexOf(location) > -1) {
+    return classes.selectedButton;
+  }
+  return null;
+};
 const LocationSelector = ({ onLocationsChange, locations }) => (
   <StyledButtonGroup className={classes.locationSelector}>
     {LOCATIONS.map((location, index) => (
       <Button
-        className={classNames(
-          classes.button,
-          getButtonClass(locations, location)
-        )}
+        className={classNames(getButtonClass(locations, location))}
         onClick={() =>
           onLocationsChange(handleButtonClick(location, locations))
         }
         key={location}
       >
         <React.Fragment>
-          <span className={classes.shortButtonText}>
-            {LOCATIONS_SHORT[index]}
-          </span>
-          <span className={classes.longButtonText}>{location}</span>
+          <span className="shortButtonText">{}</span>
+          <span className="longButtonText">{location}</span>
         </React.Fragment>
       </Button>
     ))}
@@ -274,7 +277,39 @@ const DayScaleCell = ({ ...restProps }) => {
   return <StyledWeekViewDayScaleCell {...restProps} />;
 };
 
-const SCHEDULER_STATE_CHANGE_ACTION = "SCHEDULER_STATE_CHANGE";
+const SchedulerContainer = ({
+  data,
+  currentDate,
+
+  onCurrentDateChange,
+  currentViewName,
+  onCurrentViewNameChange,
+}) => (
+  <Paper>
+    <Scheduler data={data} height={660}>
+      <ViewState
+        currentDate={currentDate}
+        onCurrentDateChange={onCurrentDateChange}
+        currentViewName={currentViewName}
+        onCurrentViewNameChange={onCurrentViewNameChange}
+      />
+      <DayView startDayHour={9} endDayHour={19} />
+      <WeekView
+        startDayHour={8}
+        endDayHour={19}
+        timeTableCellComponent={TimeTableCell}
+        dayScaleCellComponent={DayScaleCell}
+      />
+
+      <Appointments appointmentContentComponent={AppointmentContent} />
+      <Resources data={resources} />
+
+      <Toolbar flexibleSpaceComponent={FlexibleSpace} />
+      <DateNavigator />
+      <ViewSwitcher />
+    </Scheduler>
+  </Paper>
+);
 const MonthSelector = ({ currentMonth, onMonthChange }) => (
   <StyledTextField
     size="small"
@@ -287,55 +322,29 @@ const MonthSelector = ({ currentMonth, onMonthChange }) => (
     margin="dense"
   />
 );
+const CurrentDateDisplay = () => {
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-const SchedulerContainer = ({
-  data,
-  currentDate,
-  onCurrentDateChange,
-  currentViewName,
-  onCurrentViewNameChange,
-  currentMonth,
-  onMonthChange,
-}) => (
-  <Paper>
-    <Scheduler data={data} height={660}>
-      <ViewState
-        currentDate={currentDate}
-        onCurrentDateChange={onCurrentDateChange}
-        currentViewName={currentViewName}
-        onCurrentViewNameChange={onCurrentViewNameChange}
-      />
-      <MonthView /> {/* Utilisez MonthView ici */}
-      <DayView startDayHour={9} endDayHour={19} />
-      <WeekView
-        startDayHour={8}
-        endDayHour={19}
-        timeTableCellComponent={TimeTableCell}
-        dayScaleCellComponent={DayScaleCell}
-      />
-      <Appointments appointmentContentComponent={AppointmentContent} />
-      <Resources data={resources} />
-      <Toolbar flexibleSpaceComponent={FlexibleSpace} />
-      <DateNavigator />
-      <ViewSwitcher />
-      {/* Ajoutez le sélecteur de mois ici */}
-      <MonthSelector
-        currentMonth={currentMonth}
-        onMonthChange={onMonthChange}
-      />
-    </Scheduler>
-  </Paper>
-);
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  return <div>{currentDate.toString()}</div>;
+};
+const SCHEDULER_STATE_CHANGE_ACTION = "SCHEDULER_STATE_CHANGE";
 
 const schedulerInitialState = {
-  data: appointments,
-  currentDate: "2018-06-27",
+  data: [],
+  currentDate: new Date(),
   currentViewName: "Week",
   currentFilter: "",
-  locations: LOCATIONS,
-  currentMonth: "06", // Le mois par défaut est juin (06)
+  locations: [...LOCATIONS],
+  currentMonth: "",
 };
-
 const schedulerReducer = (state = schedulerInitialState, action) => {
   if (action.type === SCHEDULER_STATE_CHANGE_ACTION) {
     return {
@@ -343,37 +352,58 @@ const schedulerReducer = (state = schedulerInitialState, action) => {
       [action.payload.partialStateName]: action.payload.partialStateValue,
     };
   }
+  if (action.type === "CHANGE_MONTH") {
+    return {
+      ...state,
+      currentMonth: action.payload,
+    };
+  }
+
   return state;
 };
 
-export const createSchedulerAction = (partialStateName, partialStateValue) => ({
-  type: SCHEDULER_STATE_CHANGE_ACTION,
-  payload: {
-    partialStateName,
-    partialStateValue,
-  },
+export function createSchedulerAction(partialStateName, partialStateValue) {
+  return {
+    type: SCHEDULER_STATE_CHANGE_ACTION,
+    payload: {
+      partialStateName,
+      partialStateValue,
+    },
+  };
+}
+
+export const changeMonthAction = (month) => ({
+  type: "CHANGE_MONTH",
+  payload: month,
 });
 
 const mapStateToProps = (state) => {
-  let data = state.data.filter(
-    (dataItem) => state.locations.indexOf(dataItem.location) > -1
-  );
-  const lowerCaseFilter = state.currentFilter.toLowerCase();
-  data = data.filter(
-    (dataItem) =>
-      dataItem.title.toLowerCase().includes(lowerCaseFilter) ||
-      dataItem.location.toLowerCase().includes(lowerCaseFilter)
-  );
-  // Filtrez les rendez-vous en fonction du mois sélectionné
-  data = data.filter(
-    (dataItem) =>
-      new Date(dataItem.startDate).getMonth() + 1 ===
-      parseInt(state.currentMonth)
-  );
-  return { ...state, data };
+  let data = Reservations;
+  if (state && Array.isArray(state.data)) {
+    data = state.data;
+  }
+
+  const lowerCaseFilter = (state.currentFilter || "").toLowerCase();
+  if (data && data.filter) {
+    data = data.filter(
+      (dataItem) =>
+        dataItem.title.toLowerCase().includes(lowerCaseFilter) ||
+        dataItem.location.toLowerCase().includes(lowerCaseFilter)
+    );
+
+    data = data.filter(
+      (dataItem) =>
+        new Date(dataItem.startDate).getMonth() + 1 ===
+        parseInt(state.currentMonth)
+    );
+  }
+
+  return { ...state, data, currentMonth: state.currentMonth };
 };
 
 const mapDispatchToProps = (dispatch) => ({
+  onMonthChange: (month) => dispatch(changeMonthAction(month)),
+
   onCurrentDateChange: (currentDate) =>
     dispatch(createSchedulerAction("currentDate", currentDate)),
   onCurrentViewNameChange: (currentViewName) =>
@@ -383,7 +413,6 @@ const mapDispatchToProps = (dispatch) => ({
   onLocationsChange: (locations) =>
     dispatch(createSchedulerAction("locations", locations)),
 });
-
 const ReduxSchedulerContainer = connect(
   mapStateToProps,
   mapDispatchToProps
@@ -396,20 +425,16 @@ const ReduxLocationSelector = connect(
   mapStateToProps,
   mapDispatchToProps
 )(LocationSelector);
-
 const store = createStore(
   schedulerReducer,
-
   typeof window !== "undefined"
     ? window.__REDUX_DEVTOOLS_EXTENSION__ &&
         window.__REDUX_DEVTOOLS_EXTENSION__()
     : undefined
-  // eslint-enable
 );
-const CalendarComponent = () => (
+
+export default () => (
   <Provider store={store}>
     <ReduxSchedulerContainer />
   </Provider>
 );
-
-export default CalendarComponent;

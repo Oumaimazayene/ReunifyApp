@@ -35,10 +35,10 @@ async function getReservationsBySalleId(salleId) {
 }
 const getAllReservation = async (req, res) => {
   try {
-    const salles = await models.reservation.findAll();
+    const reservations = await models.reservation.findAll();
     res.json(reservations);
   } catch (error) {
-    res.status(500).json({ error: "Error retrieving reservation" });
+    res.status(500).json({ error: "Error retrieving reservations" });
   }
 };
 

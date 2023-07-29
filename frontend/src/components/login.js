@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   CssBaseline,
@@ -13,11 +13,13 @@ import {
 import axios from "axios";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import { loginRequest, loginSuccess, loginFailure } from "../Slices/loginSlice";
+
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as yup from "yup";
 import meeting from "../assets/meeting.png";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 const initialValues = {
   email: "",
   password: "",
@@ -31,22 +33,31 @@ const LoginForm = () => {
   const dispatch = useDispatch();
   const [emailError, setEmailError] = React.useState(false);
   const [passwordError, setPasswordError] = React.useState(false);
+  const navigate = useNavigate();
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const isAuth = useSelector((state) => state.login.isAuth);
+
+  useEffect(() => {
+    if (isAuth) {
+      navigate("/Home");
+    }
+  }, [isAuth, navigate]);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = (values, { setSubmitting }) => {
-    dispatch(loginRequest());
-    setSubmitting(true);
     const { email, password } = values;
+    dispatch(loginRequest({ email, password }));
+    setSubmitting(true);
 
     axios
       .post("http://localhost:5000/auth/login", { email, password })
       .then((response) => {
-        if (response.data.status === "OK") {
-          dispatch(loginSuccess(), localStorage.setItem);
-
+        if (response.status === "OK") {
+          dispatch(loginSuccess(response.Token));
           setEmailError(false);
           setPasswordError(false);
-
-          window.location.href = "./";
+          setSubmitSuccess(true);
+          navigate("/Home"); // Use navigate() for redirection
         } else {
           dispatch(loginFailure());
           setEmailError(true);
@@ -89,7 +100,7 @@ const LoginForm = () => {
             Sign in
           </Typography>
           <Formik
-            initialValues={{ initialValues }}
+            initialValues={initialValues}
             validationSchema={validationSchema}
             onSubmit={handleSubmit}
           >
@@ -128,10 +139,10 @@ const LoginForm = () => {
 
                 <Button
                   type="submit"
+                  disabled={isSubmitting || submitSuccess}
                   fullWidth
                   variant="contained"
                   style={{ backgroundColor: "rgb(63, 81, 181)" }}
-                  disabled={isSubmitting}
                   sx={{ mt: 3, mb: 2 }}
                 >
                   Sign In
