@@ -5,13 +5,13 @@ const adminAuth = require("../middlewars/adminAuth");
 const userAuth = require("../middlewars/auth");
 
 res_router.post(
-  "/reservations",
+  "/createReservations",
   userAuth,
 
   reservationController.createReservation
 );
 res_router.get(
-  "/salle/reservations",
+  "/reservationsBySalle/:salleId",
   adminAuth,
   reservationController.getReservationsBySalleId
 );

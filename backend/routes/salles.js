@@ -5,9 +5,9 @@ const userAuth = require("../middlewars/auth");
 const adminAuth = require("../middlewars/adminAuth");
 
 router.get("/salles", userAuth, salleController.getSalles);
-router.get("/salles/:id", userAuth, salleController.getSalleById);
-router.post("/salles", adminAuth, salleController.createSalle);
-router.put("/salles/:id", adminAuth, salleController.updateSalle);
-router.delete("/salles/:id", adminAuth, salleController.deleteSalle);
+router.get("/salleById/:id", userAuth, salleController.getSalleById);
+router.post("/createSalle", adminAuth, salleController.createSalle);
+router.put("/updateSalle/:id", adminAuth, salleController.updateSalle);
+router.delete("/seleteSalle/:id", adminAuth, salleController.deleteSalle);
 
 module.exports = router;

@@ -1,5 +1,4 @@
 const { models } = require("../models/index");
-const jwtUtils = require("../utils/jwt.utils");
 const getAllUsers = async (req, res) => {
   try {
     const Users = await models.User.findAll();
@@ -10,7 +9,7 @@ const getAllUsers = async (req, res) => {
 };
 const getUserProfile = async (req, res) => {
   try {
-    const userId = jwtUtils.getUserId(req.headers.authorization);
+    const { userId } = req.params;
 
     const user = await models.User.findOne({
       attributes: ["id", "email", "nom", "prenom"],
@@ -30,15 +29,16 @@ const getUserProfile = async (req, res) => {
 };
 const updateUserProfile = async (req, res) => {
   try {
-    const userId = jwtUtils.getUserId(req.headers.authorization);
+    const { userId } = req.params;
     const { nom } = req.body;
+    const { prenom } = req.body;
 
     const userFound = await models.User.findOne({ where: { id: userId } });
     if (!userFound) {
       return res.status(404).json({ error: "user not found" });
     }
 
-    await userFound.update({ nom: nom });
+    await userFound.update({ nom: nom, prenom: prenom });
 
     return res.status(201).json(userFound);
   } catch (error) {

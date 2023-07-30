@@ -35,18 +35,24 @@ const createSalle = async (req, res) => {
 };
 const updateSalle = async (req, res) => {
   const { id } = req.params;
-  const { name, capacity, estDisponible } = req.body;
+  const { nom, capacite, estDisponible } = req.body;
   try {
     const salle = await models.salle.findByPk(id);
     if (!salle) {
       return res.status(404).json({ error: "salle inexiste" });
     }
-    await room.update({ name, capacity });
+
+    await salle.update({
+      nom: nom,
+      capacite: capacite,
+      estDisponible: estDisponible,
+    });
     res.json(salle);
   } catch (error) {
     res.status(500).json({ error: "Error updating salle" });
   }
 };
+
 const deleteSalle = async (req, res) => {
   const { id } = req.params;
   try {

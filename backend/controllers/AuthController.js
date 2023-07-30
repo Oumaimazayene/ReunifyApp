@@ -31,7 +31,7 @@ const authController = {
       });
       await newUser.save();
 
-      return res.status(201).json({ nom: newUser.nom });
+      return res.status(201).json({ message: `Welcome ${newUser.prenom}` });
     } catch (error) {
       console.log(error);
       return res.status(500).json({ error: "Cannot add user" });
@@ -73,6 +73,7 @@ const authController = {
     }
   },
   forgot_password: async (req, res) => {
+    //add expired date to token password
     const { email } = req.body;
     try {
       const userFound = await models.User.findOne({ where: { email: email } });

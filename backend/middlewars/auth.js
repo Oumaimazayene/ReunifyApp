@@ -1,21 +1,25 @@
+const jwt_decode = require("jwt-decode");
 const jwt = require("jsonwebtoken");
-const User = require("../models/UserModel");
-
-function checkAuthorization(req, res, next) {
-  const token = req.header("x-auth-token");
-  if (!token) {
-    return res.status(401).send("Access rejected.");
-  }
+require("dotenv").config();
+const adminAuth = (req, res, next) => {
   try {
-    const decodedToken = jwt.verify(token, "privatekey");
-    req.User = decodedToken;
-    if (req.User.role !== "admin" && req.User.role !== "employee") {
-      return res.status(403).send("You are not authorized.");
-    }
-    next();
-  } catch (e) {
-    res.status(400).send("Invalid token.");
-  }
-}
+    const Token = req.header("User-Auth-Token");
 
-module.exports = checkAuthorization;
+    if (!Token) {
+      return res.status(401).json({ message: "Access denied." });
+    }
+    jwt.verify(Token, process.env.ACCESS_TOKEN, (err, user) => {
+      if (err) return res.status(400).json({ msg: " invalide Token !!" });
+      const decodeToken = jwt_decode(Token);
+
+      if (decodeToken.role !== "admin" && "employee")
+        return res.status(400).json({ msg: "you are not  authorized !!" });
+      req.user = user;
+      next();
+    });
+  } catch (err) {
+    return res.status(500).json({ msg: err.msg });
+  }
+};
+
+module.exports = adminAuth;

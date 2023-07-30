@@ -19,20 +19,29 @@ async function createReservation(req, res) {
       .json({ error: "Erreur lors de la création de la réservation" });
   }
 }
-async function getReservationsBySalleId(salleId) {
+
+const getReservationsBySalleId = async (req, res) => {
+  const { salleId } = req.params;
+
   try {
     const reservations = await models.reservation.findAll({
-      where: { salleId },
+      where: { salleId: salleId },
     });
-    return reservations;
+
+    if (reservations.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No reservations found for the provided salleId." });
+    }
+
+    return res.status(200).json(reservations);
   } catch (error) {
-    console.error(
-      "Erreur lors de la récupération des réservations de la salle :",
-      error
-    );
-    throw error;
+    return res
+      .status(500)
+      .json({ message: "An error occurred while fetching reservations." });
   }
-}
+};
+
 const getAllReservation = async (req, res) => {
   try {
     const reservations = await models.reservation.findAll();
