@@ -16,7 +16,7 @@ function dataCheck_register(req, res, next) {
       .withMessage("Le mot de passe doit avoir au moins 8 caractères."),
     body("nom")
       .notEmpty()
-      .isLength({ min: 8 })
+      .isLength({ min: 5 })
       .withMessage("Le nom doit avoir au moins 8 caractères."),
   ];
 

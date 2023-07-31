@@ -1,5 +1,4 @@
 import * as React from "react";
-import { createStore } from "redux";
 import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import ButtonGroup from "@mui/material/ButtonGroup";
@@ -10,6 +9,8 @@ import classNames from "clsx";
 import { ViewState } from "@devexpress/dx-react-scheduler";
 import { useState, useEffect } from "react";
 import { connect, Provider } from "react-redux";
+import { createStore, applyMiddleware, compose } from "redux";
+import thunk from "redux-thunk";
 
 import {
   Scheduler,
@@ -378,7 +379,7 @@ export const changeMonthAction = (month) => ({
 });
 
 const mapStateToProps = (state) => {
-  let data = Reservations;
+  let data = Reservations();
   if (state && Array.isArray(state.data)) {
     data = state.data;
   }
@@ -425,12 +426,14 @@ const ReduxLocationSelector = connect(
   mapStateToProps,
   mapDispatchToProps
 )(LocationSelector);
+const composeEnhancers =
+  typeof window !== "undefined"
+    ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
+    : compose;
+
 const store = createStore(
   schedulerReducer,
-  typeof window !== "undefined"
-    ? window.__REDUX_DEVTOOLS_EXTENSION__ &&
-        window.__REDUX_DEVTOOLS_EXTENSION__()
-    : undefined
+  composeEnhancers(applyMiddleware(thunk)) // Use composeEnhancers to combine enhancers
 );
 
 export default () => (

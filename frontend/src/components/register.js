@@ -1,6 +1,4 @@
-import React from "react";
-import { useDispatch } from "react-redux";
-import axios from "axios";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Container,
   CssBaseline,
@@ -14,62 +12,68 @@ import {
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import "../styles/login.css";
 import { Formik, Form, Field, ErrorMessage } from "formik";
+import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
+import { useDispatch, useSelector } from "react-redux";
 import meeting from "../assets/meeting.png";
-import {
-  registerRequest,
-  registerSuccess,
-  registerFailure,
-} from "../Slices/registerSlice";
+import { registerAction } from "../redux/Actions/RegisterAction";
+
 const initialValues = {
   nom: "",
   prenom: "",
   email: "",
   password: "",
 };
+const RegisterSchema = Yup.object().shape({
+  nom: Yup.string().required("Nom is required"),
+  prenom: Yup.string().required("Prénom is required"),
+  email: Yup.string().email("Invalid email").required("Email is required"),
+  password: Yup.string().required("Password is required"),
+});
 const RegisterForm = () => {
+  const [loading, setLoading] = useState(false);
+  const { userInfo } = useSelector((state) => state.register);
+  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const emailInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
 
-  const handleSubmit = (values, { setSubmitting }) => {
-    dispatch(registerRequest());
+  useEffect(() => {
+    if (userInfo) {
+      navigate("/Home");
+    }
+    emailInputRef.current?.focus();
+    passwordInputRef.current?.focus();
+  }, [navigate, userInfo]);
 
-    fetch(process.env.URL_API + "/auth/register", {
-      method: "POST",
-      crossDomain: true,
-      headers: {
-        "Content-type": "application/json",
-        Accept: "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify(values),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data, "Done");
-
-        if (data.status === "OK") {
-          axios
-            .post("http://localhost:5000/auth/register", values)
-            .catch((e) => console.log(JSON.stringify(e.response.data)));
-          dispatch(registerSuccess());
-          window.location.href = "./";
-        } else {
-          dispatch(registerFailure());
+  const submitForm = async (values) => {
+    try {
+      setLoading(true);
+      if (values.email && typeof values.email === "string") {
+        values.email = values.email.toLowerCase();
+        values.password = values.password;
+        values.nom = values.nom;
+        values.prenom = values.prenom;
+      }
+      await dispatch(registerAction(values));
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+      if (error.response && error.response.data && error.response.data.errors) {
+        const errors = error.response.data.errors;
+        if (errors.length > 0) {
+          errors.forEach((error) => {
+            console.log(`Error: ${error.msg}`);
+          });
         }
-      })
-      .finally(() => {
-        setSubmitting(false);
-      });
+      } else {
+        console.log("Error:", error.message);
+      }
+    }
   };
 
   const theme = createTheme({});
-
-  const RegisterSchema = Yup.object().shape({
-    nom: Yup.string().required("Nom is required"),
-    prenom: Yup.string().required("Prénom is required"),
-    email: Yup.string().email("Invalid email").required("Email is required"),
-    password: Yup.string().required("Password is required"),
-  });
 
   return (
     <ThemeProvider theme={theme}>
@@ -94,9 +98,9 @@ const RegisterForm = () => {
             Create your account
           </Typography>
           <Formik
-            initialValues={{ initialValues }}
+            initialValues={initialValues}
             validationSchema={RegisterSchema}
-            onSubmit={handleSubmit}
+            onSubmit={submitForm}
           >
             {({ isSubmitting }) => (
               <Form noValidate>
@@ -106,13 +110,13 @@ const RegisterForm = () => {
                   margin="normal"
                   required
                   fullWidth
-                  id="prenom"
+                  id="nom"
                   label="Name"
-                  name="Name"
-                  autoComplete="Name"
+                  name="nom"
+                  autoComplete="name"
                 />
                 <ErrorMessage
-                  name="Name"
+                  name="nom"
                   component="div"
                   style={{ color: "red" }}
                 />
@@ -124,26 +128,26 @@ const RegisterForm = () => {
                   required
                   fullWidth
                   id="prenom"
-                  label="LastName"
-                  name="LastName"
-                  autoComplete="LastName"
+                  label="Last Name"
+                  name="prenom"
+                  autoComplete="family-name"
                 />
                 <ErrorMessage
-                  name="LastName"
+                  name="prenom"
                   component="div"
                   style={{ color: "red" }}
                 />
 
                 <Field
                   as={TextField}
+                  fullWidth
                   variant="outlined"
                   margin="normal"
-                  required
-                  fullWidth
-                  id="email"
+                  name="email"
                   label="Email Address"
-                  name="email"
                   autoComplete="email"
+                  autoFocus
+                  inputRef={emailInputRef}
                 />
                 <ErrorMessage
                   name="email"
@@ -153,15 +157,14 @@ const RegisterForm = () => {
 
                 <Field
                   as={TextField}
+                  fullWidth
                   variant="outlined"
                   margin="normal"
-                  required
-                  fullWidth
                   name="password"
                   label="Password"
                   type="password"
-                  id="password"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
+                  inputRef={passwordInputRef}
                 />
                 <ErrorMessage
                   name="password"
@@ -175,10 +178,11 @@ const RegisterForm = () => {
                 />
                 <Button
                   type="submit"
+                  disabled={loading}
                   fullWidth
                   variant="contained"
-                  color="primary"
-                  disabled={isSubmitting}
+                  style={{ backgroundColor: "rgb(63, 81, 181)" }}
+                  sx={{ mt: 3, mb: 2 }}
                 >
                   Create your account
                 </Button>

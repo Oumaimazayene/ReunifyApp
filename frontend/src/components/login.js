@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Container,
   CssBaseline,
@@ -10,16 +10,15 @@ import {
   Button,
   Grid,
 } from "@mui/material";
-import axios from "axios";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { Link as RouterLink } from "react-router-dom";
-import { loginRequest, loginSuccess, loginFailure } from "../Slices/loginSlice";
-
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { LoginAction } from "../redux/Actions/LoginAction";
+import { Formik, Form, Field } from "formik";
 import * as yup from "yup";
 import meeting from "../assets/meeting.png";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify"; // Import toast here if you're using it.
+
 const initialValues = {
   email: "",
   password: "",
@@ -29,49 +28,46 @@ const validationSchema = yup.object().shape({
   email: yup.string().email("Invalid email").required("Email is required"),
   password: yup.string().required("Password is required"),
 });
+
 const LoginForm = () => {
-  const dispatch = useDispatch();
-  const [emailError, setEmailError] = React.useState(false);
-  const [passwordError, setPasswordError] = React.useState(false);
+  const [loading, setLoading] = useState(false);
+  const { userInfo } = useSelector((state) => state.login);
   const navigate = useNavigate();
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const isAuth = useSelector((state) => state.login.isAuth);
+  const dispatch = useDispatch();
+  const emailInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
 
   useEffect(() => {
-    if (isAuth) {
+    if (userInfo) {
       navigate("/Home");
     }
-  }, [isAuth, navigate]);
-  const [loading, setLoading] = useState(false);
+    emailInputRef.current?.focus();
+    passwordInputRef.current?.focus();
+  }, [navigate, userInfo]);
 
-  const handleSubmit = (values, { setSubmitting }) => {
-    const { email, password } = values;
-    dispatch(loginRequest({ email, password }));
-    setSubmitting(true);
-
-    axios
-      .post("http://localhost:5000/auth/login", { email, password })
-      .then((response) => {
-        if (response.status === "OK") {
-          dispatch(loginSuccess(response.Token));
-          setEmailError(false);
-          setPasswordError(false);
-          setSubmitSuccess(true);
-          navigate("/Home"); // Use navigate() for redirection
-        } else {
-          dispatch(loginFailure());
-          setEmailError(true);
-          setPasswordError(true);
+  const submitForm = async (values) => {
+    try {
+      setLoading(true);
+      if (values.email && typeof values.email === "string") {
+        values.email = values.email.toLowerCase();
+        values.password = values.password;
+      }
+      await dispatch(LoginAction(values));
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+      if (error.response && error.response.data && error.response.data.errors) {
+        const errors = error.response.data.errors;
+        if (errors.length > 0) {
+          errors.forEach((error) => {
+            console.log(`Error: ${error.msg}`);
+          });
         }
-        setSubmitting(false);
-      })
-      .catch((error) => {
-        console.log(error);
-        dispatch(loginFailure());
-        setEmailError(true);
-        setPasswordError(true);
-        setSubmitting(false);
-      });
+      } else {
+        console.log("Error:", error.message);
+      }
+    }
   };
 
   const theme = createTheme({});
@@ -102,66 +98,59 @@ const LoginForm = () => {
           <Formik
             initialValues={initialValues}
             validationSchema={validationSchema}
-            onSubmit={handleSubmit}
+            onSubmit={submitForm}
           >
-            {({ isSubmitting }) => (
-              <Form noValidate>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  variant="outlined"
-                  margin="normal"
-                  name="email"
-                  label="Email Address"
-                  autoComplete="email"
-                  autoFocus
-                  error={emailError}
-                  helperText={<ErrorMessage name="email" />}
-                />
+            <Form>
+              <Field
+                as={TextField}
+                fullWidth
+                variant="outlined"
+                margin="normal"
+                name="email"
+                label="Email Address"
+                autoComplete="email"
+                autoFocus
+                inputRef={emailInputRef}
+              />
+              <Field
+                as={TextField}
+                fullWidth
+                variant="outlined"
+                margin="normal"
+                name="password"
+                label="Password"
+                type="password"
+                autoComplete="password"
+                inputRef={passwordInputRef}
+              />
+              <FormControlLabel
+                control={<Checkbox value="remember" color="primary" />}
+                label="Remember me"
+              />
+              <Button
+                type="submit"
+                disabled={loading}
+                fullWidth
+                variant="contained"
+                style={{ backgroundColor: "rgb(63, 81, 181)" }}
+                sx={{ mt: 3, mb: 2 }}
+              >
+                Sign in
+              </Button>
 
-                <Field
-                  as={TextField}
-                  fullWidth
-                  variant="outlined"
-                  margin="normal"
-                  name="password"
-                  label="Password"
-                  type="password"
-                  autoComplete="current-password"
-                  error={passwordError}
-                  helperText={<ErrorMessage name="password" />}
-                />
-
-                <FormControlLabel
-                  control={<Checkbox value="remember" color="primary" />}
-                  label="Remember me"
-                />
-
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || submitSuccess}
-                  fullWidth
-                  variant="contained"
-                  style={{ backgroundColor: "rgb(63, 81, 181)" }}
-                  sx={{ mt: 3, mb: 2 }}
-                >
-                  Sign In
-                </Button>
-
-                <Grid container className="minimal-text">
-                  <Grid item xs>
-                    <RouterLink to="/forgotPassword" variant="body2">
-                      Forgot password?
-                    </RouterLink>
-                  </Grid>
-                  <Grid item>
-                    <RouterLink to="/register" variant="body2">
-                      {"Don't have an account? Sign Up"}
-                    </RouterLink>
-                  </Grid>
+              <Grid container className="minimal-text">
+                <Grid item xs>
+                  <RouterLink to="/forgotPassword" variant="body2">
+                    Forgot password?
+                  </RouterLink>
                 </Grid>
-              </Form>
-            )}
+                <Grid item>
+                  <RouterLink to="/register" variant="body2">
+                    {"Don't have an account? Sign Up"}
+                  </RouterLink>
+                </Grid>
+              </Grid>
+            </Form>
           </Formik>
         </Box>
       </Container>
