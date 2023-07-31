@@ -1,28 +1,9 @@
 import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { reservationAction } from "../../redux/Actions/reservationAction";
-import axios from "axios";
+import { useSelector } from "react-redux";
 
 const Reservations = () => {
-  const dispatch = useDispatch();
   const reservationState = useSelector((state) => state.reservation);
-
-  useEffect(() => {
-    const fetchReservations = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:5000/rservation/reservations"
-        );
-        const data = response.data;
-        dispatch(reservationAction(data));
-      } catch (error) {
-        console.error("Error fetching reservations:", error);
-      }
-    };
-
-    fetchReservations();
-  }, [dispatch]);
-
+  useEffect(() => {}, []);
   if (!reservationState || !reservationState.userInfo) {
     return <div>Loading...</div>;
   }

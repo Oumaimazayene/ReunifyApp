@@ -1,7 +1,7 @@
 const jwt_decode = require("jwt-decode");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const adminAuth = (req, res, next) => {
+const Auth = (req, res, next) => {
   try {
     const Token = req.header("User-Auth-Token");
 
@@ -22,4 +22,4 @@ const adminAuth = (req, res, next) => {
   }
 };
 
-module.exports = adminAuth;
+module.exports = Auth;

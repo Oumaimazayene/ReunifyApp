@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const adminAuth = (req, res, next) => {
   try {
-    const Token = req.header("Auth-Token");
+    const Token = req.header("User-Auth-Token");
 
     if (!Token) {
       return res.status(401).json({ message: "Access denied." });

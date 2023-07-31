@@ -433,7 +433,7 @@ const composeEnhancers =
 
 const store = createStore(
   schedulerReducer,
-  composeEnhancers(applyMiddleware(thunk)) // Use composeEnhancers to combine enhancers
+  composeEnhancers(applyMiddleware(thunk))
 );
 
 export default () => (

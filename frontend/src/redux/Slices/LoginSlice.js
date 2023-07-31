@@ -25,7 +25,7 @@ const LoginSlice = createSlice({
     [LoginAction.fulfilled]: (state, { payload }) => {
       state.loading = false;
       state.userInfo = payload;
-      state.userToken = payload.userToken;
+      state.userToken = payload.Token;
     },
     [LoginAction.rejected]: (state, { payload }) => {
       state.loading = false;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import clsx from "clsx";
 import { CssBaseline } from "@material-ui/core";
 import { Link, NavLink } from "react-router-dom";
@@ -19,6 +19,9 @@ import IconButton from "@material-ui/core/IconButton";
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
 import useMediaQuery from "@material-ui/core/useMediaQuery";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { reservationAction } from "../redux/Actions/reservationAction";
 
 const drawerWidth = 240;
 
@@ -118,9 +121,38 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function Dashboard() {
+  const dispatch = useDispatch();
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
+  const fetchReservations = async () => {
+    try {
+      const userToken = localStorage.getItem("userToken");
 
+      if (!userToken) {
+        console.error("Token not found in local storage.");
+        return;
+      }
+
+      const config = {
+        headers: {
+          "User-Auth-Token": userToken,
+        },
+      };
+
+      const response = await axios.get(
+        "http://localhost:5000/reservation/reservations",
+        config
+      );
+
+      const data = response.data;
+      dispatch(reservationAction(data));
+    } catch (error) {
+      console.error("Error fetching reservations:", error);
+    }
+  };
+  useEffect(() => {
+    fetchReservations();
+  }, []);
   const handleDrawerOpen = () => {
     setOpen(true);
   };
