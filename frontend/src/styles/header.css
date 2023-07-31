@@ -1,5 +1,5 @@
 .nav-bar {
-  background-color: #ffffff;
+  background-color: #3f51b5;
   max-height: 5rem;
   min-height: 100px;
   display: flex;
@@ -44,16 +44,16 @@
   padding: 8px 16px;
   border: none;
   border-radius: 5px;
-  background-color: #3f51b5;
-  color: #ffffff;
+  background-color: #ffffff;
+  color: #3f51b5;
   cursor: pointer;
 }
 .nav-logo-container {
   padding-top: 10px;
-  min-width: 10px;
+  max-width: 50px; /* Ajustez la largeur maximale du logo selon vos besoins */
+  max-height: 30px; /* Ajustez la hauteur maximale du logo selon vos besoins */
 }
 .menu-btn {
-  /* Ajoutez ici des styles pour le bouton du menu */
   display: none;
 }
 

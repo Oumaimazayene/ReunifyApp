@@ -41,6 +41,9 @@ const Reservations = () => {
         <div key={reservation.id}>
           <p>Title: {reservation.title}</p>
           <p>Location: {reservation.location}</p>
+          <p>Start Date: {reservation.startDate}</p>
+          <p>End Date: {reservation.endDate}</p>
+          <hr />
         </div>
       ))}
     </div>

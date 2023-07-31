@@ -4,6 +4,7 @@
 .header-wrapper {
   position: fixed;
   top: 0;
+  background-color: #3f51b5;
   margin-left: 200px;
   right: 0;
   height: 5rem; /* Ajustez la hauteur du Header selon vos besoins */
