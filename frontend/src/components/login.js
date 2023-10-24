@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import {
   Container,
   CssBaseline,
@@ -11,13 +11,11 @@ import {
   Grid,
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { LoginAction } from "../redux/Actions/LoginAction";
 import { Formik, Form, Field } from "formik";
 import * as yup from "yup";
-import meeting from "../assets/meeting.png";
-import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify"; // Import toast here if you're using it.
 
 const initialValues = {
   email: "",
@@ -31,19 +29,13 @@ const validationSchema = yup.object().shape({
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
+  const [isRegisterVisible, setIsRegisterVisible] = useState(false);
   const { userInfo } = useSelector((state) => state.login);
-  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const emailInputRef = useRef(null);
-  const passwordInputRef = useRef(null);
 
-  useEffect(() => {
-    if (userInfo) {
-      navigate("/Home");
-    }
-    emailInputRef.current?.focus();
-    passwordInputRef.current?.focus();
-  }, [navigate, userInfo]);
+  const toggleRegister = () => {
+    setIsRegisterVisible(!isRegisterVisible);
+  };
 
   const submitForm = async (values) => {
     try {
@@ -74,11 +66,6 @@ const LoginForm = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container className="Left-section">
-        <h1 className="primary-heading title">Live work, live Reunify</h1>
-        <img src={meeting} alt="meeting" className="image" />
-      </Container>
-
       <Container component="main" className="Right-section">
         <CssBaseline />
         <Box
@@ -89,11 +76,12 @@ const LoginForm = () => {
             flexDirection: "column",
             alignItems: "center",
             padding: 5,
-            borderradius: "75",
+            borderRadius: "75", // Correction de cette propriété
           }}
         >
           <Typography component="h1" variant="h5">
-            Sign in
+            {isRegisterVisible ? "Register" : "Sign in"}{" "}
+            {/* Condition pour afficher "Register" ou "Sign in" */}
           </Typography>
           <Formik
             initialValues={initialValues}
@@ -110,7 +98,6 @@ const LoginForm = () => {
                 label="Email Address"
                 autoComplete="email"
                 autoFocus
-                inputRef={emailInputRef}
               />
               <Field
                 as={TextField}
@@ -121,12 +108,25 @@ const LoginForm = () => {
                 label="Password"
                 type="password"
                 autoComplete="password"
-                inputRef={passwordInputRef}
               />
               <FormControlLabel
                 control={<Checkbox value="remember" color="primary" />}
                 label="Remember me"
               />
+              {isRegisterVisible && (
+                // Afficher le formulaire d'inscription si isRegisterVisible est vrai
+                <>
+                  <Field
+                    as={TextField}
+                    fullWidth
+                    variant="outlined"
+                    margin="normal"
+                    name="fullName"
+                    label="Full Name"
+                  />
+                  {/* Ajoutez d'autres champs d'inscription au besoin */}
+                </>
+              )}
               <Button
                 type="submit"
                 disabled={loading}
@@ -135,7 +135,8 @@ const LoginForm = () => {
                 style={{ backgroundColor: "rgb(63, 81, 181)" }}
                 sx={{ mt: 3, mb: 2 }}
               >
-                Sign in
+                {isRegisterVisible ? "Register" : "Sign in"}{" "}
+                {/* Texte du bouton basculant entre "Sign in" et "Register" */}
               </Button>
 
               <Grid container className="minimal-text">
@@ -145,9 +146,11 @@ const LoginForm = () => {
                   </RouterLink>
                 </Grid>
                 <Grid item>
-                  <RouterLink to="/register" variant="body2">
-                    {"Don't have an account? Sign Up"}
-                  </RouterLink>
+                  <Button type="button" onClick={toggleRegister} variant="text">
+                    {isRegisterVisible
+                      ? "Sign in"
+                      : "Don't have an account? Sign Up"}
+                  </Button>
                 </Grid>
               </Grid>
             </Form>

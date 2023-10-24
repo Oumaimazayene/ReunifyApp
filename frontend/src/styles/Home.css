@@ -4,9 +4,11 @@
 .header-wrapper {
   position: fixed;
   top: 0;
-  background-color: #3f51b5;
-  margin-left: 200px;
   right: 0;
+  background-color: #3f51b5;
+
+  margin-left: 200px;
+  margin-right: 0;
   height: 5rem; /* Ajustez la hauteur du Header selon vos besoins */
   z-index: 9999;
 }
@@ -22,13 +24,14 @@
 }
 
 .content {
-  padding-top: 5rem;
-  margin-left: 200px; /* Ajustez la marge gauche pour éviter la superposition avec le NavBar */
+  padding-left: 300px;
   display: flex;
+  position: fixed;
   flex-direction: column;
   align-items: center;
 }
 
 .calendar-container {
   margin-bottom: 2rem;
+  margin-right: 0;
 }

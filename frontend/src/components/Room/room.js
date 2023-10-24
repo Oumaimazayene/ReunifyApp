@@ -1,26 +1,21 @@
 import React, { useEffect } from "react";
 import clsx from "clsx";
-import { CssBaseline } from "@material-ui/core";
+import { CssBaseline, Table } from "@material-ui/core";
 import {
   makeStyles,
   createMuiTheme,
   ThemeProvider,
 } from "@material-ui/core/styles";
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
-import CalendarComponent from "./calendar/calendar";
-import Room from "./Room/room";
-
 import Drawer from "@material-ui/core/Drawer";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import IconButton from "@material-ui/core/IconButton";
 import useMediaQuery from "@material-ui/core/useMediaQuery";
-import axios from "axios";
 import { useDispatch } from "react-redux";
-import { reservationAction } from "../redux/Actions/reservationAction";
-import Sidebar from "./sidebar";
-
+import Sidebar from "../sidebar";
+import RoomTable from "./tableau";
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -82,7 +77,6 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     height: "100%",
     overflow: "auto",
-    paddingLeft: theme.spacing(35),
     paddingTop: theme.spacing(10),
     paddingBottom: 0,
   },
@@ -102,6 +96,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     paddingRight: 0,
+    paddingLeft: "200px",
   },
   fixedHeight: {
     height: 40,
@@ -119,42 +114,6 @@ export default function Dashboard() {
   const dispatch = useDispatch();
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
-  const fetchReservations = async () => {
-    try {
-      const userToken = localStorage.getItem("userToken");
-
-      if (!userToken) {
-        console.error("Token not found in local storage.");
-        return;
-      }
-
-      const config = {
-        headers: {
-          "User-Auth-Token": userToken,
-        },
-      };
-
-      const response = await axios.get(
-        "http://localhost:5000/reservation/reservations",
-        config
-      );
-
-      const data = response.data;
-      dispatch(reservationAction(data));
-    } catch (error) {
-      console.error("Error fetching reservations:", error);
-    }
-  };
-  useEffect(() => {
-    fetchReservations();
-  }, []);
-  const handleDrawerOpen = () => {
-    setOpen(true);
-  };
-
-  const handleDrawerClose = () => {
-    setOpen(false);
-  };
 
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
 
@@ -202,10 +161,11 @@ export default function Dashboard() {
         >
           <Sidebar />
         </Drawer>
+
+        <main className={classes.content}>
+          <RoomTable />
+        </main>
       </div>
-      <main className={classes.content}>
-        <CalendarComponent />
-      </main>
     </ThemeProvider>
   );
 }

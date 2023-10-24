@@ -79,7 +79,6 @@ const RegisterForm = () => {
     <ThemeProvider theme={theme}>
       <Container className="Left-section">
         <h1 className="primary-heading  title">Live work, live Reunify</h1>
-        <img src={meeting} alt="meeting" className="image" />
       </Container>
       <Container component="main" className="Right-section">
         <CssBaseline />

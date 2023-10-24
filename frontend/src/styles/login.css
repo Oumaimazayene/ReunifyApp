@@ -2,19 +2,44 @@
   min-height: 100vh;
   margin: 0rem auto;
 }
+.Basic-container {
+  position: relative;
+  justify-content: space-between;
+  align-items: center;
+  display: flex;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  padding-left: 10rem;
+  padding-right: 10rem;
+  /**/
+  background-image: linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.4) 5%,
+      rgba(117, 19, 93, 0)
+    ),
+    url("../assets/meeting.jpg");
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
 .image {
   width: 350px; /* Set the width of the image */
   height: 350px; /* Set the height of the image */
   margin-top: 100px;
+}
+.logo {
+  max-width: 100%; /* Pour que l'image ne dépasse pas de la container */
+  height: auto; /* Pour conserver les proportions de l'image */
 }
 .Basic-container {
   position: relative;
   justify-content: space-between;
   align-items: center;
   display: flex;
+  height: auto;
 
-  padding-left: 10rem;
-  padding-right: 10rem;
+  padding-left: 17rem;
+  padding-right: 0rem;
   /**/
 }
 .title {
@@ -24,10 +49,11 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  width: 200 px;
 }
 
 .Right-section {
-  max-width: 600px;
+  max-width: 200px;
   /*line-height: 5rem;*/
 }
 

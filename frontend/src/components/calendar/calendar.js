@@ -1,20 +1,16 @@
 import * as React from "react";
+import { createStore } from "redux";
+import { connect, Provider } from "react-redux";
 import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import ButtonGroup from "@mui/material/ButtonGroup";
 import Button from "@mui/material/Button";
 import { styled, alpha } from "@mui/material/styles";
-import { teal, red } from "@mui/material/colors";
+import { teal, orange, red } from "@mui/material/colors";
 import classNames from "clsx";
 import { ViewState } from "@devexpress/dx-react-scheduler";
-import { useState, useEffect } from "react";
-import { connect, Provider } from "react-redux";
-import { createStore, applyMiddleware, compose } from "redux";
-import thunk from "redux-thunk";
-
 import {
   Scheduler,
-  MonthView,
   WeekView,
   Toolbar,
   DateNavigator,
@@ -23,17 +19,19 @@ import {
   ViewSwitcher,
   Resources,
 } from "@devexpress/dx-react-scheduler-material-ui";
-import Reservations from "./appointments";
 
-const LOCATIONS = ["Room 1", "Room 2"];
-const LOCATIONS_SHORT = [1, 2];
+import { appointments } from "./appointments";
+
+const LOCATIONS = ["Room 1", "Room 2", "Room 3"];
+const LOCATIONS_SHORT = [1, 2, 3];
 const resources = [
   {
     fieldName: "location",
     title: "Location",
     instances: [
       { id: LOCATIONS[0], text: LOCATIONS[0], color: teal },
-      { id: LOCATIONS[1], text: LOCATIONS[1], color: red },
+      { id: LOCATIONS[1], text: LOCATIONS[1], color: orange },
+      { id: LOCATIONS[2], text: LOCATIONS[2], color: red },
     ],
   },
 ];
@@ -105,7 +103,7 @@ const StyledButtonGroup = styled(ButtonGroup)(
       height: spacing(4.875),
     },
     [`& .${classes.longButtonText}`]: {
-      "@media (min-width: 800px)": {
+      "@media (max-width: 800px)": {
         display: "none",
       },
     },
@@ -172,7 +170,7 @@ const AppointmentContent = ({ data, formatDate, ...restProps }) => (
   <StyledAppointmentsAppointmentContent
     {...restProps}
     formatDate={formatDate}
-    data={Reservations}
+    data={data}
   >
     <div className={classes.container}>
       <div className={classes.title}>{data.title}</div>
@@ -204,11 +202,6 @@ const Filter = ({ onCurrentFilterChange, currentFilter }) => (
 );
 
 const handleButtonClick = (locationName, locations) => {
-  if (!Array.isArray(locations)) {
-    // Faites quelque chose si locations n'est pas un tableau valide
-    return;
-  }
-
   if (locations.indexOf(locationName) > -1) {
     return locations.filter((location) => location !== locationName);
   }
@@ -217,25 +210,27 @@ const handleButtonClick = (locationName, locations) => {
   return nextLocations;
 };
 
-const getButtonClass = (locations, location) => {
-  if (Array.isArray(locations) && locations.indexOf(location) > -1) {
-    return classes.selectedButton;
-  }
-  return null;
-};
+const getButtonClass = (locations, location) =>
+  locations.indexOf(location) > -1 && classes.selectedButton;
+
 const LocationSelector = ({ onLocationsChange, locations }) => (
   <StyledButtonGroup className={classes.locationSelector}>
     {LOCATIONS.map((location, index) => (
       <Button
-        className={classNames(getButtonClass(locations, location))}
+        className={classNames(
+          classes.button,
+          getButtonClass(locations, location)
+        )}
         onClick={() =>
           onLocationsChange(handleButtonClick(location, locations))
         }
         key={location}
       >
         <React.Fragment>
-          <span className="shortButtonText">{}</span>
-          <span className="longButtonText">{location}</span>
+          <span className={classes.shortButtonText}>
+            {LOCATIONS_SHORT[index]}
+          </span>
+          <span className={classes.longButtonText}>{location}</span>
         </React.Fragment>
       </Button>
     ))}
@@ -278,16 +273,17 @@ const DayScaleCell = ({ ...restProps }) => {
   return <StyledWeekViewDayScaleCell {...restProps} />;
 };
 
+const SCHEDULER_STATE_CHANGE_ACTION = "SCHEDULER_STATE_CHANGE";
+
 const SchedulerContainer = ({
   data,
   currentDate,
-
   onCurrentDateChange,
   currentViewName,
   onCurrentViewNameChange,
 }) => (
   <Paper>
-    <Scheduler data={data} height={660}>
+    <Scheduler data={data} height={660} paddingLeft={300}>
       <ViewState
         currentDate={currentDate}
         onCurrentDateChange={onCurrentDateChange}
@@ -311,41 +307,15 @@ const SchedulerContainer = ({
     </Scheduler>
   </Paper>
 );
-const MonthSelector = ({ currentMonth, onMonthChange }) => (
-  <StyledTextField
-    size="small"
-    placeholder="Month"
-    className={classes.textField}
-    value={currentMonth}
-    onChange={({ target }) => onMonthChange(target.value)}
-    variant="outlined"
-    hiddenLabel
-    margin="dense"
-  />
-);
-const CurrentDateDisplay = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCurrentDate(new Date());
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
-  return <div>{currentDate.toString()}</div>;
-};
-const SCHEDULER_STATE_CHANGE_ACTION = "SCHEDULER_STATE_CHANGE";
 
 const schedulerInitialState = {
-  data: [],
-  currentDate: new Date(),
+  data: appointments,
+  currentDate: "2018-06-27",
   currentViewName: "Week",
   currentFilter: "",
-  locations: [...LOCATIONS],
-  currentMonth: "",
+  locations: LOCATIONS,
 };
+
 const schedulerReducer = (state = schedulerInitialState, action) => {
   if (action.type === SCHEDULER_STATE_CHANGE_ACTION) {
     return {
@@ -353,58 +323,31 @@ const schedulerReducer = (state = schedulerInitialState, action) => {
       [action.payload.partialStateName]: action.payload.partialStateValue,
     };
   }
-  if (action.type === "CHANGE_MONTH") {
-    return {
-      ...state,
-      currentMonth: action.payload,
-    };
-  }
-
   return state;
 };
 
-export function createSchedulerAction(partialStateName, partialStateValue) {
-  return {
-    type: SCHEDULER_STATE_CHANGE_ACTION,
-    payload: {
-      partialStateName,
-      partialStateValue,
-    },
-  };
-}
-
-export const changeMonthAction = (month) => ({
-  type: "CHANGE_MONTH",
-  payload: month,
+export const createSchedulerAction = (partialStateName, partialStateValue) => ({
+  type: SCHEDULER_STATE_CHANGE_ACTION,
+  payload: {
+    partialStateName,
+    partialStateValue,
+  },
 });
 
 const mapStateToProps = (state) => {
-  let data = Reservations();
-  if (state && Array.isArray(state.data)) {
-    data = state.data;
-  }
-
-  const lowerCaseFilter = (state.currentFilter || "").toLowerCase();
-  if (data && data.filter) {
-    data = data.filter(
-      (dataItem) =>
-        dataItem.title.toLowerCase().includes(lowerCaseFilter) ||
-        dataItem.location.toLowerCase().includes(lowerCaseFilter)
-    );
-
-    data = data.filter(
-      (dataItem) =>
-        new Date(dataItem.startDate).getMonth() + 1 ===
-        parseInt(state.currentMonth)
-    );
-  }
-
-  return { ...state, data, currentMonth: state.currentMonth };
+  let data = state.data.filter(
+    (dataItem) => state.locations.indexOf(dataItem.location) > -1
+  );
+  const lowerCaseFilter = state.currentFilter.toLowerCase();
+  data = data.filter(
+    (dataItem) =>
+      dataItem.title.toLowerCase().includes(lowerCaseFilter) ||
+      dataItem.location.toLowerCase().includes(lowerCaseFilter)
+  );
+  return { ...state, data };
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  onMonthChange: (month) => dispatch(changeMonthAction(month)),
-
   onCurrentDateChange: (currentDate) =>
     dispatch(createSchedulerAction("currentDate", currentDate)),
   onCurrentViewNameChange: (currentViewName) =>
@@ -414,6 +357,7 @@ const mapDispatchToProps = (dispatch) => ({
   onLocationsChange: (locations) =>
     dispatch(createSchedulerAction("locations", locations)),
 });
+
 const ReduxSchedulerContainer = connect(
   mapStateToProps,
   mapDispatchToProps
@@ -426,14 +370,16 @@ const ReduxLocationSelector = connect(
   mapStateToProps,
   mapDispatchToProps
 )(LocationSelector);
-const composeEnhancers =
-  typeof window !== "undefined"
-    ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
-    : compose;
 
 const store = createStore(
   schedulerReducer,
-  composeEnhancers(applyMiddleware(thunk))
+  // Enabling Redux DevTools Extension (https://github.com/zalmoxisus/redux-devtools-extension)
+  // eslint-disable-next-line no-underscore-dangle
+  typeof window !== "undefined"
+    ? window.__REDUX_DEVTOOLS_EXTENSION__ &&
+        window.__REDUX_DEVTOOLS_EXTENSION__()
+    : undefined
+  // eslint-enable
 );
 
 export default () => (
